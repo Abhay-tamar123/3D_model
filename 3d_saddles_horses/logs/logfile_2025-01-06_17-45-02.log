@@ -1,0 +1,38 @@
+2025-01-06 17:45:02,325 - INFO - Execution of Main functions
+2025-01-06 17:45:02,339 - WARNING -  * Debugger is active!
+2025-01-06 17:45:02,342 - INFO -  * Debugger PIN: 136-427-618
+2025-01-06 17:45:02,371 - INFO -  * Detected change in 'C:\\Users\\abhay\\anaconda3\\Lib\\site-packages\\libarchive\\__init__.py', reloading
+2025-01-06 17:45:02,409 - INFO -  * Detected change in 'C:\\Users\\abhay\\anaconda3\\Lib\\site-packages\\linkify_it\\__init__.py', reloading
+2025-01-06 17:45:02,416 - INFO -  * Detected change in 'C:\\Users\\abhay\\anaconda3\\Lib\\site-packages\\llvmlite\\__init__.py', reloading
+2025-01-06 17:45:02,425 - INFO -  * Detected change in 'C:\\Users\\abhay\\anaconda3\\Lib\\site-packages\\lmdb\\__init__.py', reloading
+2025-01-06 17:45:02,444 - INFO -  * Detected change in 'C:\\Users\\abhay\\anaconda3\\Lib\\site-packages\\lmdb\\cffi.py', reloading
+2025-01-06 17:45:02,462 - INFO -  * Detected change in 'C:\\Users\\abhay\\anaconda3\\Lib\\site-packages\\locket\\__init__.py', reloading
+2025-01-06 17:45:02,474 - INFO -  * Detected change in 'C:\\Users\\abhay\\anaconda3\\Lib\\site-packages\\lxml\\__init__.py', reloading
+2025-01-06 17:45:02,481 - INFO -  * Detected change in 'C:\\Users\\abhay\\anaconda3\\Lib\\site-packages\\lz4\\__init__.py', reloading
+2025-01-06 17:45:02,488 - INFO -  * Detected change in 'C:\\Users\\abhay\\anaconda3\\Lib\\site-packages\\markdown_it\\__init__.py', reloading
+2025-01-06 17:45:02,501 - INFO -  * Detected change in 'C:\\Users\\abhay\\anaconda3\\Lib\\site-packages\\markdown_it\\main.py', reloading
+2025-01-06 17:45:02,525 - INFO -  * Detected change in 'C:\\Users\\abhay\\anaconda3\\Lib\\site-packages\\markupsafe\\__init__.py', reloading
+2025-01-06 17:45:02,569 - INFO -  * Detected change in 'C:\\Users\\abhay\\anaconda3\\Lib\\site-packages\\matplotlib\\pylab.py', reloading
+2025-01-06 17:45:02,708 - INFO -  * Detected change in 'C:\\Users\\abhay\\anaconda3\\Lib\\site-packages\\cycler.py', reloading
+2025-01-06 17:45:02,780 - INFO -  * Detected change in 'C:\\Users\\abhay\\anaconda3\\Lib\\site-packages\\numpy\\_typing\\_extended_precision.py', reloading
+2025-01-06 17:45:03,137 - INFO -  * Detected change in 'C:\\Users\\abhay\\anaconda3\\Lib\\site-packages\\matplotlib\\tests\\__init__.py', reloading
+2025-01-06 17:45:03,145 - INFO -  * Detected change in 'C:\\Users\\abhay\\anaconda3\\Lib\\site-packages\\matplotlib_inline\\__init__.py', reloading
+2025-01-06 17:45:03,151 - INFO -  * Detected change in 'C:\\Users\\abhay\\anaconda3\\Lib\\site-packages\\mdit_py_plugins\\__init__.py', reloading
+2025-01-06 17:45:03,159 - INFO -  * Detected change in 'C:\\Users\\abhay\\anaconda3\\Lib\\site-packages\\mdurl\\__init__.py', reloading
+2025-01-06 17:45:03,172 - INFO -  * Detected change in 'C:\\Users\\abhay\\anaconda3\\Lib\\site-packages\\mdurl\\_decode.py', reloading
+2025-01-06 17:45:03,180 - INFO -  * Detected change in 'C:\\Users\\abhay\\anaconda3\\Lib\\site-packages\\mdurl\\_encode.py', reloading
+2025-01-06 17:45:03,189 - INFO -  * Detected change in 'C:\\Users\\abhay\\anaconda3\\Lib\\site-packages\\mdurl\\_format.py', reloading
+2025-01-06 17:45:03,198 - INFO -  * Detected change in 'C:\\Users\\abhay\\anaconda3\\Lib\\site-packages\\mdurl\\_parse.py', reloading
+2025-01-06 17:45:03,207 - INFO -  * Detected change in 'C:\\Users\\abhay\\anaconda3\\Lib\\site-packages\\mdurl\\_url.py', reloading
+2025-01-06 17:45:03,214 - INFO -  * Detected change in 'C:\\Users\\abhay\\anaconda3\\Lib\\site-packages\\menuinst\\__init__.py', reloading
+2025-01-06 17:45:03,228 - INFO -  * Detected change in 'C:\\Users\\abhay\\anaconda3\\Lib\\site-packages\\menuinst\\api.py', reloading
+2025-01-06 17:45:03,237 - INFO -  * Detected change in 'C:\\Users\\abhay\\anaconda3\\Lib\\site-packages\\menuinst\\_version.py', reloading
+2025-01-06 17:45:03,246 - INFO -  * Detected change in 'C:\\Users\\abhay\\anaconda3\\Lib\\site-packages\\mistune\\__init__.py', reloading
+2025-01-06 17:45:03,257 - INFO -  * Detected change in 'C:\\Users\\abhay\\anaconda3\\Lib\\site-packages\\mistune\\markdown.py', reloading
+2025-01-06 17:45:03,266 - INFO -  * Detected change in 'C:\\Users\\abhay\\anaconda3\\Lib\\site-packages\\mistune\\block_parser.py', reloading
+2025-01-06 17:45:03,276 - INFO -  * Detected change in 'C:\\Users\\abhay\\anaconda3\\Lib\\site-packages\\mistune\\inline_parser.py', reloading
+2025-01-06 17:45:03,300 - INFO -  * Detected change in 'C:\\Users\\abhay\\anaconda3\\Lib\\site-packages\\mistune\\renderers.py', reloading
+2025-01-06 17:45:03,309 - INFO -  * Detected change in 'C:\\Users\\abhay\\anaconda3\\Lib\\site-packages\\mistune\\util.py', reloading
+2025-01-06 17:45:03,320 - INFO -  * Detected change in 'C:\\Users\\abhay\\anaconda3\\Lib\\site-packages\\mkl\\__init__.py', reloading
+2025-01-06 17:45:03,327 - INFO -  * Detected change in 'C:\\Users\\abhay\\anaconda3\\Lib\\site-packages\\mkl_fft\\__init__.py', reloading
+2025-01-06 17:45:03,341 - INFO -  * Detected change in 'C:\\Users\\abhay\\anaconda3\\Lib\\site-packages\\mkl_random\\__init__.py', reloading

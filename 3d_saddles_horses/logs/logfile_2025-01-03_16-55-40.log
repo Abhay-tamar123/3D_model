@@ -1,0 +1,6 @@
+2025-01-03 16:55:40,719 - INFO - Execution of Main functions
+2025-01-03 16:55:40,745 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5001
+2025-01-03 16:55:40,745 - INFO - [33mPress CTRL+C to quit[0m
+2025-01-03 16:55:40,747 - INFO -  * Restarting with stat
+2025-01-04 10:20:52,008 - INFO -  * Restarting with stat

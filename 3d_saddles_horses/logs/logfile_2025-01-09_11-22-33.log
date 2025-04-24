@@ -1,0 +1,6 @@
+2025-01-09 11:22:33,022 - INFO - Execution of Main functions
+2025-01-09 11:22:59,482 - INFO - Reading and remeshing the saddle scan file
+2025-01-09 11:23:07,743 - INFO - Perform Preprocessing of Saddle Mesh
+2025-01-09 11:23:14,473 - INFO - Compute Number of points of Saddle Mesh
+2025-01-09 11:23:14,475 - INFO - Perform Remeshing of Saddle Mesh by computed number of points automatically
+2025-01-09 11:23:16,062 - INFO - Generating mesh from clusters

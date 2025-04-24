@@ -1,0 +1,4 @@
+2025-01-09 11:13:35,354 - INFO - Execution of Main functions
+2025-01-09 11:13:40,616 - INFO - Reading and remeshing the saddle scan file
+2025-01-09 11:14:01,547 - INFO - Perform Preprocessing of Saddle Mesh
+2025-01-09 11:14:18,770 - INFO - Compute Number of points of Saddle Mesh

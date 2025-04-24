@@ -1,0 +1,16 @@
+2024-12-27 12:55:03,962 - INFO - Execution of Main functions
+2024-12-27 12:55:08,813 - INFO - Reading and remeshing the saddle scan file
+2024-12-27 12:55:55,633 - INFO - Perform Preprocessing of Saddle Mesh
+2024-12-27 12:57:01,096 - INFO - Compute Number of points of Saddle Mesh
+2024-12-27 12:57:14,190 - INFO - Perform Remeshing of Saddle Mesh by computed number of points automatically
+2024-12-27 12:57:18,389 - INFO - Generating mesh from clusters
+2024-12-27 12:57:58,828 - INFO - Completed with Remeshing of Saddle
+2024-12-27 12:58:04,306 - INFO - Perform Manualy Select the 3 Point of Saddle
+2024-12-27 13:00:03,804 - INFO - Computed initial distance vectors for alignment.
+2024-12-27 13:00:13,530 - INFO - Reading and remeshing the Horse scan file
+2024-12-27 13:00:43,983 - INFO - Perform Preprocessing of Horse Mesh
+2024-12-27 13:01:59,697 - INFO - Compute Number of points of Horse Mesh
+2024-12-27 13:02:04,984 - INFO - Perform Remeshing of Horse Mesh by computed number of points automatically
+2024-12-27 13:02:12,434 - INFO - Generating mesh from clusters
+2024-12-27 13:02:58,928 - INFO - Completed with Remeshing of Horse
+2024-12-27 13:03:03,356 - INFO - Perform Manualy Select the 3 Point of Horse

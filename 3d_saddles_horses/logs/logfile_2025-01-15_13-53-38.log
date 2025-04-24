@@ -1,0 +1,25 @@
+2025-01-15 13:53:38,665 - INFO - Execution of Main functions
+2025-01-15 13:53:48,840 - INFO - Reading and remeshing the saddle scan file
+2025-01-15 13:54:07,205 - INFO - Perform Preprocessing of Saddle Mesh
+2025-01-15 13:54:18,512 - INFO - Compute Number of points of Saddle Mesh
+2025-01-15 13:54:18,514 - INFO - Perform Remeshing of Saddle Mesh by computed number of points automatically
+2025-01-15 13:54:20,198 - INFO - Generating mesh from clusters
+2025-01-15 13:55:02,073 - INFO - Completed with Remeshing of Saddle
+2025-01-15 13:55:12,960 - INFO - Perform Manualy Select the 3 Point of Saddle
+2025-01-15 13:55:32,025 - INFO - Computed initial distance vectors for alignment.
+2025-01-15 13:55:35,148 - INFO - Reading and remeshing the Horse scan file
+2025-01-15 13:55:37,931 - INFO - Perform Preprocessing of Horse Mesh
+2025-01-15 13:56:15,925 - INFO - Compute Number of points of Horse Mesh
+2025-01-15 13:56:15,929 - INFO - Perform Remeshing of Horse Mesh by computed number of points automatically
+2025-01-15 13:56:23,072 - INFO - Generating mesh from clusters
+2025-01-15 13:57:37,504 - INFO - Completed with Remeshing of Horse
+2025-01-15 13:57:37,517 - INFO - Perform Manualy Select the 3 Point of Horse
+2025-01-15 13:57:50,132 - INFO - Computed initial distance vectors for alignment.
+2025-01-15 13:57:50,155 - INFO - Completed with Initial Alignment
+2025-01-15 14:00:22,095 - INFO - PERFORM AUTO ALIGNMENT OF SADDLE ON HORSE
+2025-01-15 14:00:33,471 - INFO - Logic Implementation to get Auto Alignement
+2025-01-15 14:00:33,477 - INFO - Completed with Auto_Alignments
+2025-01-15 14:00:33,477 - INFO - Compute Gap Calculation
+2025-01-15 14:00:35,730 - INFO - Distance measurement
+2025-01-15 14:00:58,492 - INFO - Method 1: Interpolation using Nearest Neighbor
+2025-01-15 14:00:59,427 - INFO - Method 2: Interpolation using Linear Interpolation

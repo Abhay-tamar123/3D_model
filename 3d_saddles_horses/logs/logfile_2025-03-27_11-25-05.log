@@ -1,0 +1,13 @@
+2025-03-27 11:25:05,934 - INFO - Execution of Main functions
+2025-03-27 11:25:27,237 - INFO - Reading and remeshing the saddle scan file
+2025-03-27 11:25:50,945 - INFO - Perform Preprocessing of Saddle Mesh
+2025-03-27 11:25:56,747 - INFO - Compute Number of points of Saddle Mesh
+2025-03-27 11:25:56,749 - INFO - Perform Remeshing of Saddle Mesh by computed number of points automatically
+2025-03-27 11:25:58,406 - INFO - Generating mesh from clusters
+2025-03-27 11:26:20,116 - INFO - Completed with Remeshing of Saddle
+2025-03-27 11:26:20,119 - INFO - Reading and remeshing the Horse scan file
+2025-03-27 11:26:22,002 - INFO - Perform Preprocessing of Horse Mesh
+2025-03-27 11:26:59,295 - INFO - Compute Number of points of Horse Mesh
+2025-03-27 11:26:59,297 - INFO - Perform Remeshing of Horse Mesh by computed number of points automatically
+2025-03-27 11:27:06,569 - INFO - Generating mesh from clusters
+2025-03-27 11:28:50,368 - INFO - Completed with Remeshing of Horse

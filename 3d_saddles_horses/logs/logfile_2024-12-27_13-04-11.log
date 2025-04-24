@@ -1,0 +1,29 @@
+2024-12-27 13:04:11,895 - INFO - Execution of Main functions
+2024-12-27 13:04:15,249 - INFO - Reading and remeshing the saddle scan file
+2024-12-27 13:04:21,123 - INFO - Perform Preprocessing of Saddle Mesh
+2024-12-27 13:04:27,680 - INFO - Compute Number of points of Saddle Mesh
+2024-12-27 13:04:27,682 - INFO - Perform Remeshing of Saddle Mesh by computed number of points automatically
+2024-12-27 13:04:29,680 - INFO - Generating mesh from clusters
+2024-12-27 13:04:47,029 - INFO - Completed with Remeshing of Saddle
+2024-12-27 13:04:47,030 - INFO - Perform Manualy Select the 3 Point of Saddle
+2024-12-27 13:05:06,675 - INFO - Computed initial distance vectors for alignment.
+2024-12-27 13:05:06,682 - INFO - Reading and remeshing the Horse scan file
+2024-12-27 13:05:08,809 - INFO - Perform Preprocessing of Horse Mesh
+2024-12-27 13:05:43,471 - INFO - Compute Number of points of Horse Mesh
+2024-12-27 13:05:43,472 - INFO - Perform Remeshing of Horse Mesh by computed number of points automatically
+2024-12-27 13:05:50,404 - INFO - Generating mesh from clusters
+2024-12-27 13:06:39,705 - INFO - Completed with Remeshing of Horse
+2024-12-27 13:06:39,717 - INFO - Perform Manualy Select the 3 Point of Horse
+2024-12-27 13:06:53,898 - INFO - Computed initial distance vectors for alignment.
+2024-12-27 13:06:53,913 - INFO - Completed with Initial Alignment
+2024-12-27 13:06:59,499 - INFO - PERFORM AUTO ALIGNMENT OF SADDLE ON HORSE
+2024-12-27 13:07:53,537 - INFO - Logic Implementation to get Auto Alignement
+2024-12-27 13:07:53,541 - INFO - Completed with Auto_Alignments
+2024-12-27 13:07:53,541 - INFO - Compute Gap Calculation
+2024-12-27 13:07:58,468 - INFO - Distance measurement
+2024-12-27 13:08:12,425 - INFO - Method 1: Interpolation using Nearest Neighbor
+2024-12-27 13:08:16,242 - INFO - Method 2: Interpolation using Linear Interpolation
+2024-12-27 13:08:30,629 - INFO - Saving Computed Measurement Data by Two interpolation method
+2024-12-27 13:08:30,982 - INFO - CSV File for Nearest Interpolation Created Successfully
+2024-12-27 13:08:31,864 - INFO - CSV File for Linear Interpolation Created Successfully
+2024-12-27 13:08:31,865 - INFO - Completed with Execution

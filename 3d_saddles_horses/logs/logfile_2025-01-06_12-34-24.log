@@ -1,0 +1,10 @@
+2025-01-06 12:35:11,112 - INFO - Reading and remeshing the saddle scan file
+2025-01-06 12:35:19,413 - INFO - Perform Preprocessing of Saddle Mesh
+2025-01-06 12:35:27,813 - INFO - Compute Number of points of Saddle Mesh
+2025-01-06 12:35:35,446 - INFO - Perform Remeshing of Saddle Mesh by computed number of points automatically
+2025-01-06 12:35:37,082 - INFO - Generating mesh from clusters
+2025-01-06 12:36:03,194 - INFO - Completed with Remeshing of Saddle
+2025-01-06 12:36:13,538 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5001
+2025-01-06 12:36:13,539 - INFO - [33mPress CTRL+C to quit[0m
+2025-01-06 12:36:13,543 - INFO -  * Restarting with stat
