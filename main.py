@@ -7,6 +7,8 @@ from scipy.interpolate import griddata
 from scipy.spatial import KDTree
 import os
 import pandas as pd
+from scipy.spatial import cKDTree
+from scipy.spatial.distance import cdist
 
 
 def load_obj(file_path):
@@ -118,6 +120,7 @@ def pv_to_o3d_mesh(pv_mesh):
     faces = o3d.utility.Vector3iVector(pv_mesh.faces.reshape(-1, 4)[:, 1:])
     o3d_mesh = o3d.geometry.TriangleMesh(vertices, faces)
     return o3d_mesh
+
 # ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 # ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 # ////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -125,8 +128,26 @@ def pv_to_o3d_mesh(pv_mesh):
 # ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 def main():
-    source_file = r"C:\Users\abhay\OneDrive\Desktop\Desktop office\horse1.obj"
-    target_file = r"C:\Users\abhay\OneDrive\Desktop\Desktop office\saddle_s.obj"
+    """
+    Main function to process, align, and visualize 3D models of a horse and saddle.
+    This function performs the following steps:
+    1. Loads 3D models of the source (horse) and target (saddle) from .obj files.
+    2. Preprocesses the point clouds by downsampling them to a specified voxel size.
+    3. Allows the user to manually pick corresponding points from the source and target point clouds.
+    4. Computes a transformation matrix to align the source to the target using the selected points.
+    5. Applies the transformation to the source and visualizes the alignment using PyVista.
+    6. Saves the transformed source and target meshes to a new subfolder with an incrementing name.
+    7. Adjusts the Z-coordinates of the target points to avoid penetration with the source.
+    8. Generates meshes from the adjusted point clouds using Ball Pivoting Algorithm (BPA).
+    9. Visualizes the adjusted meshes and saves them as .obj files.
+    10. Combines the source and target meshes into a single mesh and saves it.
+    11. Calculates distance statistics between the source and target meshes and saves them to an Excel file.
+    12. Visualizes the optimal saddle fit on the horse along with distance measurements.
+    13. Performs additional alignment using Iterative Closest Point (ICP) and visualizes the results.
+    14. Allows the user to pick points on the right and left sides of the target mesh to calculate average Z-coordinates and distances.
+    """
+    source_file = r"C:\Users\abhay\OneDrive\Desktop\3dModel_latest (1)\3d_saddles_horses\horse1.obj"
+    target_file = r"C:\Users\abhay\OneDrive\Desktop\3dModel_latest (1)\3d_saddles_horses\saddle_c.obj"
 
     source = load_obj(source_file)
     target = load_obj(target_file)
@@ -213,7 +234,7 @@ def main():
     combined_mesh.compute_vertex_normals()
 
     # Save the combined mesh to a single .obj file
-    combined_file = os.path.join(subfolder_path, "combined_aligned.obj")
+    combined_file = os.path.join(subfolder_path, "combined_aligned_before_mesh.obj")
     o3d.io.write_triangle_mesh(combined_file, combined_mesh)
     print(f"Combined aligned mesh saved to {combined_file}")
 # =======================================================================================================================================
@@ -252,23 +273,59 @@ def main():
     plotter.show()
 
 
-    # Prepare data for Excel
+
     adjustments_data = []
 
-    for _ in range(10):  # Run the adjustment process 10 times
+    for iteration in range(10):  # Run the adjustment process 10 times
         for i, target_point in enumerate(target_points):
             closest_source_point = source_points[np.argmin(np.linalg.norm(source_points - target_point, axis=1))]
             if target_point[1] < closest_source_point[1]:  # Check if target point is lower in Z-axis
                 existing_entry = next((entry for entry in adjustments_data if entry["Point Index"] == i), None)
                 if existing_entry:
-                    existing_entry["Adjusted Z"] = closest_source_point[1]
+                    existing_entry["Changed Distance in mm"] = (closest_source_point[1] - target_point[1])*1000
                 else:
                     adjustments_data.append({
                         "Point Index": i,
-                        "Original Z": target_point[1],
-                        "Adjusted Z": closest_source_point[1]
+                        "Original Coordinates": target_point.tolist(),
+                        "Adjusted Coordinates": closest_source_point.tolist(),
+                        # "Original Z": target_point[1],
+                        # "Adjusted Z": closest_source_point[1]
+                        "Changed Distance in mm": (closest_source_point[1] - target_point[1])*1000
                     })
                 target_points[i][1] = closest_source_point[1]  # Adjust Z-coordinate to match the source
+
+        # Visualize the changes after each iteration
+        updated_target_pv = pv.PolyData(target_points)
+        updated_target_pv["adjusted"] = np.zeros(len(target_points))
+        
+        # Mark changed points in red
+        for entry in adjustments_data:
+            updated_target_pv["adjusted"][entry["Point Index"]] = 1
+
+        plotter = pv.Plotter()
+        plotter.add_mesh(source_pv, color="blue", opacity=0.5, label="Source Mesh")
+        plotter.add_mesh(updated_target_pv, scalars="adjusted", cmap="coolwarm", 
+                 point_size=5, render_points_as_spheres=True, 
+                 scalar_bar_args={"title": "Adjusted Points"})
+        plotter.add_text(f"Iteration: {iteration + 1}", position="upper_left", font_size=5, color="black")
+        plotter.show_grid()
+        plotter.close()
+
+        # Save the updated target points as a new .obj file
+        updated_target_mesh = o3d.geometry.TriangleMesh()
+        updated_target_mesh.vertices = o3d.utility.Vector3dVector(target_points)
+        updated_target_mesh.triangles = o3d.utility.Vector3iVector([])  # No faces, just points
+
+        # Handle file name repetition
+        file_index = 1
+        while True:
+            combined_file = os.path.join(subfolder_path, f"Change_in_target_{file_index}.obj")
+            if not os.path.exists(combined_file):
+                break
+            file_index += 1
+
+        o3d.io.write_triangle_mesh(combined_file, updated_target_mesh)
+        print(f"Updated target points saved to {combined_file}")
 
     for i, _ in enumerate(target_points):
         lowest_target_point = target_points[np.argmin(target_points[:, 1])]  # Get the lowest point of target in Z-axis
@@ -277,12 +334,13 @@ def main():
             point_index = np.argmin(target_points[:, 1])
             existing_entry = next((entry for entry in adjustments_data if entry["Point Index"] == point_index), None)
             if existing_entry:
-                existing_entry["Adjusted Z"] = closest_source_point[1]
+                existing_entry["Adjusted Z"] = (closest_source_point[1] - lowest_target_point[1])*1000
             else:
                 adjustments_data.append({
                     "Point Index": point_index,
-                    "Original Z": lowest_target_point[1],
-                    "Adjusted Z": closest_source_point[1]
+                    "Original Coordinates": target_point.tolist(),
+                    "Adjusted Coordinates": closest_source_point.tolist(),
+                    "Changed Distance in mm": (closest_source_point[1] - lowest_target_point[1])*1000
                 })
             target_points[point_index, 1] = closest_source_point[1]  # Adjust Z-coordinate to match the source
 
@@ -299,7 +357,6 @@ def main():
     excel_file_path = os.path.join(subfolder_path, "adjustments_data.xlsx")
     adjustments_df.to_excel(excel_file_path, index=False)
     print(f"Adjustments data saved to {excel_file_path}")
-        
     if lowest_target_point[1] < closest_source_point[1]:  # Check if penetration still exists
         # Rotate the target slightly around the X-axis to adjust the angle
         rotation_matrix = o3d.geometry.get_rotation_matrix_from_xyz((np.pi / 180, 0, 0))  # Rotate by 1 degree
@@ -382,8 +439,6 @@ def main():
     p.show_grid()
     _ = p.show() 
 
-
-
 # =======================================================================================================================================
     # Combine the target and source meshes into a single mesh
     combined_mesh = o3d.geometry.TriangleMesh()
@@ -406,7 +461,7 @@ def main():
     # Calculate distances for the best fit, allows for efficient nearest-neighbor searches on the saddle mesh.
     tree = KDTree(adjusted_target_pv.points)
     # Query the nearest points from final_saddle_mesh for each point in body_mesh_2 and compute distances.
-    distances, idx = tree.query(adjusted_source_pv.points)
+    distances = tree.query(adjusted_source_pv.points)[0]
     # Add the calculated distances as a new attribute "distances" to body_mesh_2, indicating 
     # the distance between each point on body_mesh_2 and its nearest neighbor in the final_saddle_mesh.
     adjusted_source_pv["distances"] = distances
@@ -426,44 +481,230 @@ def main():
     # ================================================================================
     # Visualize the optimal saddle fit on the horse along with distance measurements
     # ================================================================================
+
+    # Plot the meshes and lines
     p = pv.Plotter()
     p.add_mesh(adjusted_source_pv, scalars="distances", 
-            smooth_shading=True, cmap="coolwarm", 
-            clim=[0, np.max(distances)])
+               smooth_shading=True, cmap="coolwarm", 
+               clim=[0, np.max(distances)], label="Source Mesh")
     p.add_mesh(adjusted_target_pv, color="white", 
-            opacity=0.5, smooth_shading=True)
+               opacity=0.5, smooth_shading=True, label="Target Mesh")
+    p.add_legend()
     p.show_grid()
-    p.show() 
+    p.show()
+
+
+# ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+# ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+# ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+# ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+# ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    # Step 1: Calculate nearest neighbor distances
+    source_points = np.asarray(adjusted_source_pv.points)
+    target_points = np.asarray(adjusted_target_pv.points)
+
+    target_kdtree = cKDTree(target_points)
+    distances, indices = target_kdtree.query(source_points)
+
+    # Step 2: Add distances to source mesh
+    source_pv = adjusted_source_pv.copy()
+    target_pv = adjusted_target_pv.copy()
+    distances_in_mm = distances * 1000  # Convert to inches
+    # source_pv["distances_in_inches"] = distances_in_inches
+    target_pv["distances_in_mm"] = distances_in_mm
+
+    # Calculate the center of the source_pv
+    source_center = source_pv.center
+
+    # Define the length of the line
+    line_length = 2  # Adjust the length as needed
+
+    # Create a line along the Z-axis passing through the center
+    line_start = source_center - np.array([0, 0, line_length / 2])
+    line_end = source_center + np.array([0, 0, line_length / 2])
+
+    # Create a PyVista line for the center
+    center_line = pv.Line(line_start, line_end)
+
+    # Create two parallel lines at a distance of 0.1 along the X-axis
+    offset = 0.04
+    line1_start = source_center - np.array([offset, 0,  line_length / 2])
+    line1_end = source_center + np.array([-offset, 0,  line_length / 2])
+    line2_start = source_center - np.array([-offset, 0,  line_length / 2])
+    line2_end = source_center + np.array([offset, 0,  line_length / 2])
+
+    # Create PyVista lines for the parallel lines
+    parallel_line1 = pv.Line(line1_start, line1_end)
+    parallel_line2 = pv.Line(line2_start, line2_end)
+
+    # Filter points between parallel_line1 and parallel_line2
+    source_points = np.asarray(source_pv.points)
+    target_points = np.asarray(target_pv.points)
+
+    # Calculate the X-coordinates of the parallel lines
+    x_min = min(line1_start[0], line2_start[0])
+    x_max = max(line1_start[0], line2_start[0])
+
+    # Mask points that lie between the parallel lines
+    mask = (source_points[:, 0] >= x_min) & (source_points[:, 0] <= x_max)
+
+    # Calculate the average gap distance for the filtered points in mm
+    average_gap_distance_mm = np.mean(source_pv["distances"][mask]) * 1000  # Convert to mm
+    print(f"Average gap distance between horse and saddle: {average_gap_distance_mm:.2f} mm")
+
+
+    # Calculate the X-coordinate of parallel_line1 and parallel_line2
+    x_threshold_right = line1_start[0]
+    x_threshold_left = line2_start[0]
+
+    # Mask points that lie to the right of parallel_line1
+    mask_right = source_points[:, 0] > x_threshold_right
+
+    # Mask points that lie to the left of parallel_line2
+    mask_left = source_points[:, 0] < x_threshold_left
+
+    # Calculate the average gap distance for the filtered points in mm (right side)
+    average_gap_distance_right_mm = np.mean(source_pv["distances"][mask_right]) * 1000  # Convert to mm
+    print(f"Average gap distance between horse and saddle (right side): {average_gap_distance_right_mm:.2f} mm")
+
+    # Calculate the average gap distance for the filtered points in mm (left side)
+    average_gap_distance_left_mm = np.mean(source_pv["distances"][mask_left]) * 1000  # Convert to mm
+    print(f"Average gap distance between horse and saddle (left side): {average_gap_distance_left_mm:.2f} mm")
+
+    # Add the lines to the plotter
+    plotter.add_mesh(center_line, color="yellow", line_width=5, label="Center Line")
+    plotter.add_mesh(parallel_line1, color="purple", line_width=5, label="Parallel Line 1")
+    plotter.add_mesh(parallel_line2, color="red", line_width=5, label="Parallel Line 2")
+
+    # Display the average gap distance on the plot
+
+    plotter = pv.Plotter()
+    plotter.add_text(f"Avg Gap: {average_gap_distance_mm:.2f} mm", position="upper_left", font_size=10, color="black")
+    plotter.add_text(f"Avg Gap (Right): {average_gap_distance_right_mm:.2f} mm", position="lower_left", font_size=10, color="black")
+    plotter.add_text(f"Avg Gap (Left): {average_gap_distance_left_mm:.2f} mm", position="lower_right", font_size=10, color="black")
+    plotter.add_mesh(source_pv, color="#214d0f",
+                    smooth_shading=True, show_edges=False,opacity=0.7,
+                    )
+    plotter.add_mesh(target_pv,
+                    smooth_shading=True, show_edges=False, scalars="distances_in_mm", cmap="coolwarm",
+                      name="Target Mesh", scalar_bar_args={"title": "Distance (mm)"})
+    plotter.enable_eye_dome_lighting()
+    plotter.show_grid()
+    plotter.show()
 
 
 
-    # Extract x and z (assuming adjusted_target_pv is a pyvista mesh)
-    x = adjusted_target_pv.points[:, 0]
-    z = adjusted_target_pv.points[:, 2]
 
-    # Create fine grid
-    grid_x, grid_z = np.mgrid[
-        x.min():x.max():1000j,
-        z.min():z.max():1000j
-    ]
 
-    grid_distances = griddata((x, z), distances, (grid_x, grid_z), method='linear')
-    masked_distances = np.ma.masked_invalid(grid_distances)
-    plt.figure(figsize=(12, 10))
-    contour = plt.contourf(
-        grid_x, grid_z, masked_distances,
-        levels=200, cmap='coolwarm', alpha=0.95
+
+
+
+    # Step 1: Calculate nearest neighbor distances
+    source_points = np.asarray(adjusted_source_pv.points)
+    target_points = np.asarray(adjusted_target_pv.points)
+
+    # Create edge lines around the target mesh
+    edges = adjusted_target_pv.extract_feature_edges(
+        boundary_edges=True,
+        feature_edges=False,
+        manifold_edges=False,
+        non_manifold_edges=False
     )
-    plt.scatter(x, z, c=distances, cmap='coolwarm', s=2, edgecolors='k', linewidths=0.1)
-    cbar = plt.colorbar(contour)
-    cbar.set_label("Distance", fontsize=14)
-    plt.title("Smoothed Heatmap (Valid Region Only)", fontsize=16)
-    plt.xlabel("X", fontsize=13)
-    plt.ylabel("Z", fontsize=13)
-    plt.grid(alpha=0.3, linestyle='--')
-    plt.tight_layout()
-    plt.show()
+    # Move the edge lines from the target mesh to the source mesh by translating them
+    # Compute the translation vector from target to source (using centroids)
+    target_centroid = np.mean(target_points, axis=0)
+    source_centroid = np.mean(source_points, axis=0)
+    translation_vector = source_centroid - target_centroid
+    # edges.translate([0, 0.02, 0], inplace=True)
+
+
+    # Apply the translation to the edge lines
+    edges_on_source = edges.translate(translation_vector, inplace=False)
+
+    # Offset the edge lines based on the difference between edges_on_source and edges
+    # Compute the offset as the mean difference between corresponding points
+    if edges_on_source.points.shape == edges.points.shape:
+        offset_vector = np.mean(edges.points - edges_on_source.points, axis=0)
+        edges_on_source_offset = edges_on_source.translate(offset_vector, inplace=False)
+    else:
+        # If shapes don't match, just use the translation as before
+        edges_on_source_offset = edges_on_source
+
+    edges_on_source_offset.translate([0, -0.1, 0], inplace=True)
+
+    # Use edges_on_source_offset for visualization
+            # offset_vector = np.array([0, 0, np.mean(edges.points[:, 2] - edges_on_source.points[:, 2])])
+
+    # Create a grid between the two edge lines (edges and edges_on_source_offset)
+    # We'll interpolate points between corresponding points on both edge lines
+
+    # Ensure both edge lines have the same number of points for grid creation
+    n_points = min(edges.points.shape[0], edges_on_source_offset.points.shape[0])
+    edge1 = edges.points[:n_points]
+    edge2 = edges_on_source_offset.points[:n_points]
+
+    # Number of divisions in the grid between the two edges
+    n_divisions = 20  # You can adjust this for grid density
+
+    # Generate grid points between the two edge lines
+    grid_points = []
+    for i in range(n_points):
+        for t in np.linspace(0, 1, n_divisions):
+            pt = (1 - t) * edge1[i] + t * edge2[i]
+            grid_points.append(pt)
+    grid_points = np.array(grid_points)
+
+    # Optionally, create faces for visualization (as quads)
+    faces = []
+    for i in range(n_points - 1):
+        for j in range(n_divisions - 1):
+            idx0 = i * n_divisions + j
+            idx1 = idx0 + 1
+            idx2 = idx0 + n_divisions + 1
+            idx3 = idx0 + n_divisions
+            faces.extend([4, idx0, idx1, idx2, idx3])
+    faces = np.array(faces)
+
+    grid_mesh = pv.PolyData(grid_points, faces)
+
+    # Find source points inside grid_mesh
+    # Use PyVista's select_enclosed_points to test which source points are inside the grid mesh
+    source_points_pv = pv.PolyData(source_points)
+    enclosed = source_points_pv.select_enclosed_points(grid_mesh, tolerance=1e-6, check_surface=False)
+    inside_mask = enclosed.point_data['SelectedPoints'].astype(bool)
+    source_points_inside = source_points[inside_mask]
+
+    print(f"Number of source points inside grid_mesh: {source_points_inside.shape[0]}")
+
+
+    target_points_pv = pv.PolyData(target_points)
+    enclosed = target_points_pv.select_enclosed_points(edges, tolerance=1e-6, check_surface=False)
+    inside_mask = enclosed.point_data['SelectedPoints'].astype(bool)
+    target_points_inside = target_points[inside_mask]
+
+    print(f"Number of target points inside grid_mesh: {target_points_inside.shape[0]}")
+
+    # Compute pairwise distances between source_points_inside and target_points_inside
+
+    if source_points_inside.shape[0] > 0 and target_points_inside.shape[0] > 0:
+        distances_matrix = cdist(source_points_inside, target_points_inside)
+        # For each source point, find the closest target point and its distance
+        max_distances = distances_matrix.max(axis=1)
+    else:
+        print("No points found inside the grid mesh for source or target.")
+
+    plotter = pv.Plotter()
+    if source_points_inside.shape[0] > 0:
+        norm_min_distances = (max_distances - np.min(max_distances)) / (np.ptp(max_distances) + 1e-8)
+        plotter.add_mesh(pv.PolyData(source_points_inside),scalars=norm_min_distances,cmap="hot",point_size=10,render_points_as_spheres=True,clim=[0, 1],scalar_bar_args={"title": "Min Distance Heatmap"},label="Source Points Heatmap")
+    plotter.add_mesh(source_pv, color="#214d0f",smooth_shading=True, show_edges=False,opacity=0.7)
+    plotter.add_mesh(target_pv,color="Green" ,smooth_shading=True, show_edges=False, opacity=0.5, name="Target Mesh")
+    plotter.enable_eye_dome_lighting()
+    plotter.show_grid()
+    plotter.show()
 
 
 if __name__ == "__main__":
     main()
+
