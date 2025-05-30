@@ -571,7 +571,6 @@ def main():
     # Calculate the average gap distance for the filtered points in mm (left side)
     average_gap_distance_left_mm = np.mean(source_pv["distances"][mask_left]) * 1000  # Convert to mm
     print(f"Average gap distance between horse and saddle (left side): {average_gap_distance_left_mm:.2f} mm")
-
     # Add the lines to the plotter
     plotter.add_mesh(center_line, color="yellow", line_width=5, label="Center Line")
     plotter.add_mesh(parallel_line1, color="purple", line_width=5, label="Parallel Line 1")
@@ -600,107 +599,178 @@ def main():
 
 
 
-    # Step 1: Calculate nearest neighbor distances
+    # Extract point arrays from PyVista meshes
     source_points = np.asarray(adjusted_source_pv.points)
     target_points = np.asarray(adjusted_target_pv.points)
 
-    # Create edge lines around the target mesh
-    edges = adjusted_target_pv.extract_feature_edges(
-        boundary_edges=True,
-        feature_edges=False,
-        manifold_edges=False,
-        non_manifold_edges=False
-    )
-    # Move the edge lines from the target mesh to the source mesh by translating them
-    # Compute the translation vector from target to source (using centroids)
-    target_centroid = np.mean(target_points, axis=0)
-    source_centroid = np.mean(source_points, axis=0)
-    translation_vector = source_centroid - target_centroid
-    # edges.translate([0, 0.02, 0], inplace=True)
+
+    # Parameters
+    min_distance = 0.05
+    num_points = 60
+
+    # Step 1: Select 60 target points with at least 0.05 distance apart
+    target_tree = cKDTree(target_points)
+    all_indices = np.random.permutation(len(target_points))
+
+    selected_target_points = []
+    selected_indices = []
+
+    for idx in all_indices:
+        candidate = target_points[idx]
+        if len(selected_target_points) == 0:
+            selected_target_points.append(candidate)
+            selected_indices.append(idx)
+        else:
+            distances = np.linalg.norm(np.array(selected_target_points) - candidate, axis=1)
+            if np.all(distances >= min_distance):
+                selected_target_points.append(candidate)
+                selected_indices.append(idx)
+        if len(selected_target_points) == num_points:
+            break
+
+    selected_target_points = np.array(selected_target_points)
+
+    # Step 2: Match each target point to a source point with closest x and z
+    selected_source_points = []
+    for pt in selected_target_points:
+        xz = pt[[0, 2]]
+        diffs = np.linalg.norm(source_points[:, [0, 2]] - xz, axis=1)
+        min_index = np.argmin(diffs)
+        matched_source_point = source_points[min_index].copy()
+        matched_source_point[[0, 2]] = xz  # force x and z to match exactly
+        selected_source_points.append(matched_source_point)
+
+    selected_source_points = np.array(selected_source_points)
 
 
-    # Apply the translation to the edge lines
-    edges_on_source = edges.translate(translation_vector, inplace=False)
+    # Step 3: Name points and compute distances
+    point_names = [f"p{i+1}" for i in range(len(selected_target_points))]
+    distances = np.linalg.norm(selected_target_points - selected_source_points, axis=1)
 
-    # Offset the edge lines based on the difference between edges_on_source and edges
-    # Compute the offset as the mean difference between corresponding points
-    if edges_on_source.points.shape == edges.points.shape:
-        offset_vector = np.mean(edges.points - edges_on_source.points, axis=0)
-        edges_on_source_offset = edges_on_source.translate(offset_vector, inplace=False)
-    else:
-        # If shapes don't match, just use the translation as before
-        edges_on_source_offset = edges_on_source
-
-    edges_on_source_offset.translate([0, -0.1, 0], inplace=True)
-
-    # Use edges_on_source_offset for visualization
-            # offset_vector = np.array([0, 0, np.mean(edges.points[:, 2] - edges_on_source.points[:, 2])])
-
-    # Create a grid between the two edge lines (edges and edges_on_source_offset)
-    # We'll interpolate points between corresponding points on both edge lines
-
-    # Ensure both edge lines have the same number of points for grid creation
-    n_points = min(edges.points.shape[0], edges_on_source_offset.points.shape[0])
-    edge1 = edges.points[:n_points]
-    edge2 = edges_on_source_offset.points[:n_points]
-
-    # Number of divisions in the grid between the two edges
-    n_divisions = 20  # You can adjust this for grid density
-
-    # Generate grid points between the two edge lines
-    grid_points = []
-    for i in range(n_points):
-        for t in np.linspace(0, 1, n_divisions):
-            pt = (1 - t) * edge1[i] + t * edge2[i]
-            grid_points.append(pt)
-    grid_points = np.array(grid_points)
-
-    # Optionally, create faces for visualization (as quads)
-    faces = []
-    for i in range(n_points - 1):
-        for j in range(n_divisions - 1):
-            idx0 = i * n_divisions + j
-            idx1 = idx0 + 1
-            idx2 = idx0 + n_divisions + 1
-            idx3 = idx0 + n_divisions
-            faces.extend([4, idx0, idx1, idx2, idx3])
-    faces = np.array(faces)
-
-    grid_mesh = pv.PolyData(grid_points, faces)
-
-    # Find source points inside grid_mesh
-    # Use PyVista's select_enclosed_points to test which source points are inside the grid mesh
-    source_points_pv = pv.PolyData(source_points)
-    enclosed = source_points_pv.select_enclosed_points(grid_mesh, tolerance=1e-6, check_surface=False)
-    inside_mask = enclosed.point_data['SelectedPoints'].astype(bool)
-    source_points_inside = source_points[inside_mask]
-
-    print(f"Number of source points inside grid_mesh: {source_points_inside.shape[0]}")
+    # Print distances
+    print("Point Name | Distance between Target and Source")
+    print("-----------------------------------------------")
+    for name, dist in zip(point_names, distances):
+        print(f"{name:<9} | {dist:.6f}")
 
 
-    target_points_pv = pv.PolyData(target_points)
-    enclosed = target_points_pv.select_enclosed_points(edges, tolerance=1e-6, check_surface=False)
-    inside_mask = enclosed.point_data['SelectedPoints'].astype(bool)
-    target_points_inside = target_points[inside_mask]
+    # Create a straight line from the center of the selected target points
+    center_point = np.mean(selected_target_points, axis=0)
+    line_length = 0.5  # Adjust as needed
+    direction = np.array([0, 0, 1])  # Along the Z axis
 
-    print(f"Number of target points inside grid_mesh: {target_points_inside.shape[0]}")
+    # Main center line
+    line_start = center_point - direction * (line_length / 2)
+    line_end = center_point + direction * (line_length / 2)
+    straight_line = pv.Line(line_start, line_end)
 
-    # Compute pairwise distances between source_points_inside and target_points_inside
+    # Offset for parallel lines (along X axis, adjust as needed)
+    offset = 0.035
+    right_offset = np.array([offset, 0, 0])
+    left_offset = np.array([-offset, 0, 0])
 
-    if source_points_inside.shape[0] > 0 and target_points_inside.shape[0] > 0:
-        distances_matrix = cdist(source_points_inside, target_points_inside)
-        # For each source point, find the closest target point and its distance
-        max_distances = distances_matrix.max(axis=1)
-    else:
-        print("No points found inside the grid mesh for source or target.")
+    # Right parallel line
+    right_line_start = line_start + right_offset
+    right_line_end = line_end + right_offset
+    right_parallel_line = pv.Line(right_line_start, right_line_end)
+
+    # Left parallel line
+    left_line_start = line_start + left_offset
+    left_line_end = line_end + left_offset
+    left_parallel_line = pv.Line(left_line_start, left_line_end)
+
+    # Step 3.1: Classify points by their X position relative to the parallel lines
+    # right_parallel_line is offset along +X, left_parallel_line along -X
+    right_x = right_line_start[0]
+    left_x = left_line_start[0]
+
+    # Points to the right of right_parallel_line
+    right_side_mask = selected_target_points[:, 0] > right_x
+    # Points to the left of left_parallel_line
+    left_side_mask = selected_target_points[:, 0] < left_x
+
+    center_mask = ~(right_side_mask | left_side_mask)
+
+    # Extract actual point coordinates using masks
+    right_points = selected_target_points[right_side_mask]
+    sright_points = selected_source_points[right_side_mask]
+
+    center_P =  selected_target_points[center_mask]
+    center_S = selected_source_points[center_mask]
+
+    left_points = selected_target_points[left_side_mask]
+    sleft_points = selected_source_points[left_side_mask]
+
+
+
+    # Wrap them in PyVista PolyData
+    right_poly = pv.PolyData(right_points)
+    S_right_poly = pv.PolyData(sright_points)
+
+    # Access point coordinates via .points
+    point_names1 = [f"Rp{i+1}" for i in range(len(right_poly.points))]
+
+    # Compute distances
+    distances = np.linalg.norm(right_poly.points - S_right_poly.points, axis=1)
+
+    # Print distances
+    print("Point Name | Distance between Target and Source")
+    print("-----------------------------------------------")
+    for name, dist in zip(point_names1, distances):
+        print(f"{name:<9} | {dist:.6f}")
+
+
+    # Wrap center points in PyVista PolyData
+    center_poly = pv.PolyData(center_P)
+    S_center_poly = pv.PolyData(center_S)
+    # Access point coordinates via .points  
+    point_names_center = [f"Cp{i+1}" for i in range(len(center_poly.points))]
+    # Compute distances for center points
+    distances_center = np.linalg.norm(center_poly.points - S_center_poly.points, axis=1)
+    # Print distances for center points
+    for name, dist in zip(point_names_center, distances_center):
+        print(f"{name:<9} | {dist:.6f}")
+
+    # Wrap left points in PyVista PolyData
+    left_poly = pv.PolyData(left_points)
+    S_left_poly = pv.PolyData(sleft_points)
+    # Step 3: Name points and compute distances
+    point_names2 = [f"Lp{i+1}" for i in range(len(left_poly.points))]
+    distances_left = np.linalg.norm(left_poly.points - S_left_poly.points, axis=1)
+    for name, dist in zip(point_names2, distances_left):
+        print(f"{name:<9} | {dist:.6f}")
+
+    # Save all distances and point names to Excel
+    all_names = point_names1 + point_names_center + point_names2
+    all_distances = np.concatenate([(distances-0.01)*1000, (distances_center-0.01)*1000, (distances_left-0.01)*1000])  # Convert to mm
+    all_types = (["Right"] * len(point_names1)) + (["Center"] * len(point_names_center)) + (["Left"] * len(point_names2))
+    df = pd.DataFrame({
+        "Point Name": all_names,
+        "Type": all_types,
+        "Distance": all_distances
+    })
+    excel_file_path = os.path.join(subfolder_path, "pointwise_distances.xlsx")
+    df.to_excel(excel_file_path, index=False)
+    print(f"Pointwise distances saved to {excel_file_path}")
+
+
+
+    # Add the straight line to the plotter
+
+    # Step 4: Visualization
 
     plotter = pv.Plotter()
-    if source_points_inside.shape[0] > 0:
-        norm_min_distances = (max_distances - np.min(max_distances)) / (np.ptp(max_distances) + 1e-8)
-        plotter.add_mesh(pv.PolyData(source_points_inside),scalars=norm_min_distances,cmap="hot",point_size=10,render_points_as_spheres=True,clim=[0, 1],scalar_bar_args={"title": "Min Distance Heatmap"},label="Source Points Heatmap")
-    plotter.add_mesh(source_pv, color="#214d0f",smooth_shading=True, show_edges=False,opacity=0.7)
-    plotter.add_mesh(target_pv,color="Green" ,smooth_shading=True, show_edges=False, opacity=0.5, name="Target Mesh")
-    plotter.enable_eye_dome_lighting()
+    plotter.add_mesh(adjusted_target_pv, color="white", opacity=0.5, show_edges=True, label="Target")
+    plotter.add_mesh(adjusted_source_pv, color="red", opacity=0.5, show_edges=True, label="Source")
+    label_data = pv.PolyData(right_poly.points)
+    label_data["name"] = point_names1  # e.g., ["Rp1", "Rp2", ..., "RpN"]
+    plotter.add_point_labels(label_data, "name", point_size=20, font_size=14, text_color="yellow")
+    label_data_center = pv.PolyData(center_poly.points)
+    label_data_center["name"] = point_names_center
+    plotter.add_point_labels(label_data_center, "name", point_size=20, font_size=14, text_color="purple")
+    label_data1 = pv.PolyData(left_poly.points)
+    label_data1["name"] = point_names2
+    plotter.add_point_labels(label_data1, "name", point_size=20, font_size=14, text_color="black")
     plotter.show_grid()
     plotter.show()
 
